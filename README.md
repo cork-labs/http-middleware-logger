@@ -10,27 +10,35 @@ npm install --save @cork-labs/http-middleware-logger
 ```
 
 ```javascript
+const bunyan = require('bunyan');
+const logger = bunyan.createLogger({ name: name });
+
 // your application setup
 const httpLogger = require('@cork-labs/http-middleware-logger');
-app.use(httpLogger());
+const options = {};
+app.use(httpLogger(options, logger));
 
 // your route
 app.get('/path', (req, res, next) => {
-  req.info(data, 'message');
+  req.logger.info(data, 'message');
 })
 ```
 
+Provide an instance of [bunyan](https://www.npmjs.com/package/bunyan) logger when configuring the middleware.
+
+Note: [@cork-labs/logger](https://www.npmjs.com/package/@cork-labs/logger) can help with configuring Bunyan.
 
 ## API
 
-### req.info(data, message)
+The child logger is exposed in `req.logger`.
 
-### req.warn(data, message)
+The essential [bunyan](https://www.npmjs.com/package/bunyan) API:
 
-### req.error(data, message)
-
-### req.debug(data, message)
-
+- `req.logger.child(fields, true)` // true preserves parent's stream configuration
+- `req.logger.warn(data, 'message')`
+- `req.logger.error(data, 'message')`
+- `req.logger.debug(data, 'message')`
+- `req.logger.child(data, 'message')`
 
 ## Configuration
 
@@ -51,9 +59,9 @@ app.use(httpLogger(options));
 
 ### requestFields (default: { method: 'method', path: 'path' })
 
-### tracetKey (default: 'tracet')
+### traceKey (default: 'trace')
 
-### tracetFields (default: { uuid: 'uuid', current: 'path' })
+### traceFields (default: { uuid: 'uuid', current: 'path' })
 
 
 ## Develop

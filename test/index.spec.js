@@ -26,15 +26,24 @@ describe('httpTrace ()', function () {
 
   describe('middleware api', function () {
     beforeEach(function () {
-      this.middleware = httpTrace();
+      this.childLogger = {
+        info: sinon.spy()
+      };
+      this.logger = {
+        child: sinon.stub()
+      };
+      this.logger.child.returns(this.childLogger);
+      this.middleware = httpTrace({}, this.logger);
     });
 
     describe('when the middleware function is invoked', function () {
       beforeEach(function () {
         this.req = {
-          headers: {
-            'x-cork-labs-req-parent-id': 'foo',
-            'x-cork-labs-client-ip': 'bar'
+          method: 'PUT',
+          path: '/foo/bar',
+          trace: {
+            uuid: '1f2',
+            current: '3d1'
           }
         };
         this.res = {};
@@ -46,96 +55,86 @@ describe('httpTrace ()', function () {
         expect(this.nextSpy).to.have.callCount(1);
       });
 
-      it('should expose the "trace" object in req', function () {
-        expect(this.req.trace).to.be.an('object');
-      });
-
-      it('should generate a "uuid"', function () {
-        expect(this.req.trace.uuid).to.match(/^[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}$/);
-      });
-
-      it('should generate a "current"', function () {
-        expect(this.req.trace.current).to.match(/^[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}$/);
-      });
-
-      it('should carry over the "parent"', function () {
-        expect(this.req.trace.parent).to.equal('foo');
-      });
-
-      it('should carry over the "ip"', function () {
-        expect(this.req.trace.ip).to.equal('bar');
-      });
-    });
-
-    describe('when "req.headers" contains an id', function () {
-      beforeEach(function () {
-        this.req = {
-          headers: {
-            'x-cork-labs-req-trace-id': 'foobar'
+      it('should create a child logger', function () {
+        const expectedTrace = {
+          trace: {
+            current: '3d1',
+            uuid: '1f2'
           }
         };
-        this.res = {};
-        this.nextSpy = sinon.spy();
+        expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace, true);
       });
 
-      describe('and the middleware function is invoked', function () {
-        beforeEach(function () {
-          this.middleware(this.req, this.res, this.nextSpy);
-        });
-
-        it('should expose the "trace" object in req', function () {
-          expect(this.req.trace.uuid).to.equal('foobar');
-        });
+      it('should log the request"', function () {
+        const expectedLog = {
+          request: {
+            method: 'PUT',
+            path: '/foo/bar'
+          }
+        };
+        expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'http request');
       });
     });
   });
 
   describe('middleware configuration', function () {
     beforeEach(function () {
-      this.req = {};
-      this.res = {
-        status: sinon.spy(),
-        header: sinon.spy(),
-        json: sinon.spy()
+      this.childLogger = {
+        info: sinon.spy()
       };
-      this.nextSpy = sinon.spy();
+      this.logger = {
+        child: sinon.stub()
+      };
+      this.logger.child.returns(this.childLogger);
     });
 
-    describe('when the configuration contains custom headers', function () {
+    describe('when ', function () {
       beforeEach(function () {
         this.config = {
-          headers: {
-            uuid: 'x-foo',
-            parent: 'x-bar',
-            ip: 'x-baz'
+          message: 'foobar.foobar',
+          requestKey: 'foo',
+          requestFields: {
+            method: 'bar'
+          },
+          traceKey: 'baz',
+          traceFields: {
+            uuid: 'qux'
           }
         };
-        this.middleware = httpTrace(this.config);
+        this.middleware = httpTrace(this.config, this.logger);
       });
 
-      describe('and "req.headers" is populated accordingly', function () {
+      describe('and the middleware function is invoked', function () {
         beforeEach(function () {
           this.req = {
-            headers: {
-              'x-foo': '11',
-              'x-bar': '22',
-              'x-baz': '33'
+            method: 'PUT',
+            path: '/foo/bar',
+            trace: {
+              uuid: '1f2',
+              current: '3d1'
             }
           };
           this.res = {};
           this.nextSpy = sinon.spy();
+          this.middleware(this.req, this.res, this.nextSpy);
         });
 
-        describe('and the middleware function is invoked', function () {
-          beforeEach(function () {
-            this.middleware(this.req, this.res, this.nextSpy);
-          });
+        it('should pass the custom data to the child logger', function () {
+          const expectedTrace = {
+            baz: {
+              qux: '1f2'
+            }
+          };
+          expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace, true);
+        });
 
-          it('should read from the custom headers', function () {
-            expect(this.req.trace.uuid).to.equal('11');
-            expect(this.req.trace.parent).to.equal('22');
-            expect(this.req.trace.ip).to.equal('33');
-          });
+        it('should log custom fields"', function () {
+          const expectedLog = {
+            foo: {
+              bar: 'PUT'
+            }
+          };
+          expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'foobar.foobar');
         });
       });
     });

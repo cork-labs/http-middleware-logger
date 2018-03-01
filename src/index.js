@@ -3,25 +3,19 @@
 const defaults = {
   message: 'http request',
   requestKey: 'request',
-  requestFields: {},
+  requestFields: {
+    method: 'method',
+    path: 'path'
+  },
   traceKey: 'trace',
-  traceFields: {}
-};
-
-const requestFields = {
-  method: 'method',
-  path: 'path'
-};
-
-const traceFields = {
-  uuid: 'uuid',
-  current: 'current'
+  traceFields: {
+    uuid: 'uuid',
+    current: 'current'
+  }
 };
 
 const logger = function (config, logger) {
   config = Object.assign({}, defaults, config);
-  config.requestFields = Object.assign({}, requestFields, config.requestFields);
-  config.traceFields = Object.assign({}, traceFields, config.traceFields);
 
   // -- middleware
 
