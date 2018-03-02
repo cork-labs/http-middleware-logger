@@ -1,12 +1,20 @@
 'use strict';
 
+const onHeaders = require('on-headers');
+
 const defaults = {
-  message: 'http request',
+  requestMessage: 'http-middleware-logger::request',
   requestKey: 'request',
   requestFields: {
     method: 'method',
     path: 'path'
   },
+  responseMessage: 'http-middleware-logger::response',
+  responseKey: 'response',
+  responseFields: {
+    statusCode: 'status'
+  },
+  responseTiming: false,
   traceKey: 'trace',
   traceFields: {
     uuid: 'uuid',
@@ -27,12 +35,21 @@ const logger = function (config, logger) {
     }
     // true preserves parent's stream configuration
     req.logger = logger.child(fields, true);
-    const data = {};
-    data[config.requestKey] = {};
+    const requestData = {};
+    requestData[config.requestKey] = {};
     for (let key in config.requestFields) {
-      data[config.requestKey][config.requestFields[key]] = req[key];
+      requestData[config.requestKey][config.requestFields[key]] = req[key];
     }
-    req.logger.info(data, config.message);
+    req.logger.info(requestData, config.requestMessage);
+
+    onHeaders(res, () => {
+      const responseData = {};
+      responseData[config.responseKey] = {};
+      for (let key in config.responseFields) {
+        responseData[config.responseKey][config.responseFields[key]] = res[key];
+      }
+      req.logger.info(responseData, config.responseMessage);
+    });
     next();
   };
 };

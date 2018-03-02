@@ -72,7 +72,7 @@ describe('httpTrace ()', function () {
             path: '/foo/bar'
           }
         };
-        expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'http request');
+        expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'http-middleware-logger::request');
       });
     });
   });
@@ -88,17 +88,23 @@ describe('httpTrace ()', function () {
       this.logger.child.returns(this.childLogger);
     });
 
-    describe('when ', function () {
+    describe('when configuration is custom', function () {
       beforeEach(function () {
         this.config = {
-          message: 'foobar.foobar',
+          requestMessage: 'foobar.request',
           requestKey: 'foo',
           requestFields: {
             method: 'bar'
           },
-          traceKey: 'baz',
+          responseMessage: 'foobar.response',
+          repsonseKey: 'baz',
+          repsonseFields: {
+            statusCode: 'qux'
+          },
+          responseTiming: true,
+          traceKey: 'quux',
           traceFields: {
-            uuid: 'qux'
+            uuid: 'quuux'
           }
         };
         this.middleware = httpTrace(this.config, this.logger);
@@ -121,8 +127,8 @@ describe('httpTrace ()', function () {
 
         it('should pass the custom data to the child logger', function () {
           const expectedTrace = {
-            baz: {
-              qux: '1f2'
+            quux: {
+              quuux: '1f2'
             }
           };
           expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace, true);
@@ -134,7 +140,7 @@ describe('httpTrace ()', function () {
               bar: 'PUT'
             }
           };
-          expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'foobar.foobar');
+          expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'foobar.request');
         });
       });
     });
