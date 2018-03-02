@@ -1,6 +1,6 @@
 {
   "name": "@cork-labs/http-middleware-logger",
-  "version": "0.2.0",
+  "version": "0.2.1-pre",
   "description": "Express middleware, adds a configurable child logger to each request.",
   "license": "MIT",
   "homepage": "https://github.com/cork-labs/http-middleware-logger",
