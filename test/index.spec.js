@@ -6,16 +6,16 @@ const sinonChai = require('sinon-chai');
 chai.use(sinonChai);
 const expect = chai.expect;
 
-const httpTrace = require('../src/index');
+const httpLogger = require('../src/index');
 
-describe('httpTrace ()', function () {
+describe('httpLogger ()', function () {
   it('should be a function', function () {
-    expect(httpTrace).to.be.a('function');
+    expect(httpLogger).to.be.a('function');
   });
 
   describe('when invoked', function () {
     beforeEach(function () {
-      this.middleware = httpTrace();
+      this.middleware = httpLogger();
     });
 
     it('should return a middleware function', function () {
@@ -27,13 +27,14 @@ describe('httpTrace ()', function () {
   describe('middleware api', function () {
     beforeEach(function () {
       this.childLogger = {
-        info: sinon.spy()
+        info: sinon.spy(),
+        error: sinon.spy()
       };
       this.logger = {
         child: sinon.stub()
       };
       this.logger.child.returns(this.childLogger);
-      this.middleware = httpTrace({}, this.logger);
+      this.middleware = httpLogger({}, this.logger);
     });
 
     describe('when the middleware function is invoked', function () {
@@ -63,6 +64,12 @@ describe('httpTrace ()', function () {
           }
         };
         expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace, true);
+        expect(this.req.logger).to.equal(this.childLogger);
+      });
+
+      it('should create a timing object', function () {
+        expect(this.req.timing).to.be.an('object');
+        expect(this.req.timing.constructor.name).to.equal('Timing');
       });
 
       it('should log the request"', function () {
@@ -74,13 +81,37 @@ describe('httpTrace ()', function () {
         };
         expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'http-middleware-logger::request');
       });
+
+      it('should expose log() in the res object"', function () {
+        expect(this.res.log).to.be.a('function');
+      });
+
+      describe('when res.log() is invoked', function () {
+        beforeEach(function () {
+          this.res.statusCode = 333;
+          this.res.log({ foo: 'bar' });
+        });
+
+        it('should log the response"', function () {
+          const expectedLog = {
+            response: {
+              status: 333
+            },
+            timing: {
+              total: 0
+            }
+          };
+          expect(this.childLogger.error).to.have.been.calledWithExactly(expectedLog, 'http-middleware-logger::response');
+        });
+      });
     });
   });
 
   describe('middleware configuration', function () {
     beforeEach(function () {
       this.childLogger = {
-        info: sinon.spy()
+        info: sinon.spy(),
+        error: sinon.spy()
       };
       this.logger = {
         child: sinon.stub()
@@ -107,7 +138,7 @@ describe('httpTrace ()', function () {
             uuid: 'quuux'
           }
         };
-        this.middleware = httpTrace(this.config, this.logger);
+        this.middleware = httpLogger(this.config, this.logger);
       });
 
       describe('and the middleware function is invoked', function () {

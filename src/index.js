@@ -1,6 +1,6 @@
 'use strict';
 
-const onHeaders = require('on-headers');
+const Timing = require('@cork-labs/classes-timing');
 
 const defaults = {
   requestMessage: 'http-middleware-logger::request',
@@ -11,19 +11,24 @@ const defaults = {
   },
   responseMessage: 'http-middleware-logger::response',
   responseKey: 'response',
+  responseTimingKey: 'timing',
   responseFields: {
     statusCode: 'status'
   },
-  responseTiming: false,
   traceKey: 'trace',
   traceFields: {
     uuid: 'uuid',
     current: 'current'
-  }
+  },
+  severityMap: {}
 };
 
 const logger = function (config, logger) {
   config = Object.assign({}, defaults, config);
+
+  const mapSeverity = (res) => {
+    return config.severityMap[res.statusCode];
+  };
 
   // -- middleware
 
@@ -41,15 +46,20 @@ const logger = function (config, logger) {
       requestData[config.requestKey][config.requestFields[key]] = req[key];
     }
     req.logger.info(requestData, config.requestMessage);
+    req.timing = new Timing('start');
 
-    onHeaders(res, () => {
+    res.log = () => {
       const responseData = {};
       responseData[config.responseKey] = {};
       for (let key in config.responseFields) {
         responseData[config.responseKey][config.responseFields[key]] = res[key];
       }
-      req.logger.info(responseData, config.responseMessage);
-    });
+      if (config.responseTimingKey) {
+        responseData[config.responseTimingKey] = req.timing.elapsed();
+      }
+      const severity = res.severity || mapSeverity(res) || 'error';
+      req.logger[severity](responseData, config.responseMessage);
+    };
     next();
   };
 };
