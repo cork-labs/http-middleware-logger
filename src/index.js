@@ -1,6 +1,6 @@
 'use strict';
 
-const Timing = require('@cork-labs/classes-timing');
+const Timing = require('@cork-labs/class-timing');
 
 const defaults = {
   requestMessage: 'http-middleware-logger::request',

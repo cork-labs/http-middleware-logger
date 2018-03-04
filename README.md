@@ -176,7 +176,7 @@ We'd love for you to contribute to our source code and to make it even better th
 Check [CONTRIBUTING](https://github.com/cork-labs/contributing/blob/master/CONTRIBUTING.md) before submitting issues and PRs.
 
 
-## Tools
+## Links
 
 - [npm-bump](https://www.npmjs.com/package/npm-bump)
 - [chai](http://chaijs.com/api/)
