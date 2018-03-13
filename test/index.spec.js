@@ -79,7 +79,7 @@ describe('httpLogger ()', function () {
             path: '/foo/bar'
           }
         };
-        expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'http-middleware-logger::request');
+        expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'monkfish.port.http.request');
       });
 
       it('should expose log() in the res object"', function () {
@@ -101,7 +101,7 @@ describe('httpLogger ()', function () {
               total: 0
             }
           };
-          expect(this.childLogger.error).to.have.been.calledWithExactly(expectedLog, 'http-middleware-logger::response');
+          expect(this.childLogger.error).to.have.been.calledWithExactly(expectedLog, 'monkfish.port.http.response');
         });
       });
     });
