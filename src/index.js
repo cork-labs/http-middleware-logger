@@ -3,17 +3,19 @@
 const Timing = require('@cork-labs/class-timing');
 
 const defaults = {
-  requestMessage: 'http-middleware-logger::request',
+  fields: {},
+  requestMessage: 'monkfish.port.http.request',
   requestKey: 'request',
   requestFields: {
     method: 'method',
     path: 'path'
   },
-  responseMessage: 'http-middleware-logger::response',
+  responseMessage: 'monkfish.port.http.response',
   responseKey: 'response',
   responseTimingKey: 'timing',
   responseFields: {
-    statusCode: 'status'
+    statusCode: 'status',
+    errorCode: 'code'
   },
   traceKey: 'trace',
   traceFields: {
@@ -33,7 +35,7 @@ const logger = function (config, logger) {
   // -- middleware
 
   return function (req, res, next) {
-    const fields = {};
+    const fields = Object.assign({}, config.fields);
     fields[config.traceKey] = {};
     for (let key in config.traceFields) {
       fields[config.traceKey][config.traceFields[key]] = req.trace[key];
