@@ -89,13 +89,15 @@ describe('httpLogger ()', function () {
       describe('when res.log() is invoked', function () {
         beforeEach(function () {
           this.res.statusCode = 333;
+          this.res.errorCode = 999;
           this.res.log({ foo: 'bar' });
         });
 
         it('should log the response"', function () {
           const expectedLog = {
             response: {
-              status: 333
+              status: 333,
+              code: 999
             },
             timing: {
               total: 0
