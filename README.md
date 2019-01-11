@@ -11,9 +11,10 @@ npm install --save @cork-labs/http-middleware-logger
 
 ```javascript
 const bunyan = require('bunyan');
-const logger = bunyan.createLogger({ name: name });
+const Logger = require('@cork-labs/monkfish-adapter-logger').Logger;
 
 // your application setup
+const logger = Logger.createLogger({ name: 'my-app', streams: [{ type:'console' }] });
 const httpLogger = require('@cork-labs/http-middleware-logger');
 const options = {};
 this._express.use(httpLogger(config, logger));
@@ -29,18 +30,20 @@ app.get('/path', (req, res, next) => {
 })
 ```
 
-Provide an instance of [bunyan](https://www.npmjs.com/package/bunyan) logger when configuring the middleware.
+Provide an instance of [@cork-labs/monkfish-adapter-logger](https://www.npmjs.com/package/@cork-labs/monkfish-adapter-logger).
 
-Note: [@cork-labs/logger](https://www.npmjs.com/package/@cork-labs/logger) can help with configuring Bunyan.
+It supports:
+- child loggers (child contexts)
+- multiple streams at once (e.g.: console, [bunyan](https://www.npmjs.com/package/@cork-), files, ...)
 
 ## API
 
-A child logger is created per request, and trace information is aded to the logger.
+A child logger is created per request, and trace information is added to the logger.
 
 The request is immediately logged.
 
 ```
-16:29:19.273Z  INFO az.auth: HttpApi::request()
+> my-app | Thu, 10 Jan 2019 23:51:35 GMT | INFO | HttpApi::request()
   trace: {
     "uuid": "5b42547e-bd2f-4090-896c-18edfd79f39b",
     "current": "5efc8d65-2dd3-458c-8a46-96aa37985a4f"
@@ -54,7 +57,7 @@ The request is immediately logged.
 
 The child logger is exposed in `req.logger` and you can log further messages.
 
-All messages contain the same trace object.
+All messages contain the same trace object plus whatever data you provide to them.
 
 ```
 16:29:19.279Z  INFO az.auth: Service::handle()
@@ -71,13 +74,15 @@ All messages contain the same trace object.
   }
 ```
 
-The essential [bunyan](https://www.npmjs.com/package/bunyan) API:
+The essential [monkfish-adapter-logger](https://www.npmjs.com/package/@cork-labs/monkfish-adapter-logger) API:
 
-- `req.logger.child(fields, true)` // true preserves parent's stream configuration
-- `req.logger.warn(data, 'message')`
-- `req.logger.error(data, 'message')`
-- `req.logger.debug(data, 'message')`
-- `req.logger.child(data, 'message')`
+- `req.logger.child(data = {})` returns a new logger, containing all the parent context plus the provided optional data
+- `req.logger.set(key, value = undefined)` - adds key to context data (avoid adding objects, keep it flat!)
+- `req.logger.debug('message', data = {})` - logs debug level message, with adittional data (optional)
+- `req.logger.info('message', data = {})` - same, info level
+- `req.logger.warn('message', data = {})` - same, warning level
+- `req.logger.error('message', data = {}, err = ...)` - same, error level, plus optional error (ideally a subclass of Error)
+- `req.logger.flat(prefix = '', obj)` flattens the object for logging
 
 ### res.log()
 
@@ -99,7 +104,7 @@ The response log contains a number of configurable.
 The severity of this message can be configured via `options.severityMap`.
 
 ```
-16:29:25.987Z  INFO az.auth: HttpApi::response()
+> my-app | Thu, 10 Jan 2019 23:51:35 GMT | INFO | HttpApi::response()
   trace: {
     "uuid": "5b42547e-bd2f-4090-896c-18edfd79f39b",
     "current": "5efc8d65-2dd3-458c-8a46-96aa37985a4f"
