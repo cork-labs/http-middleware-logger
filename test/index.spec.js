@@ -63,7 +63,7 @@ describe('httpLogger ()', function () {
             uuid: '1f2'
           }
         };
-        expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace, true);
+        expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace);
         expect(this.req.logger).to.equal(this.childLogger);
       });
 
@@ -79,7 +79,7 @@ describe('httpLogger ()', function () {
             path: '/foo/bar'
           }
         };
-        expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'monkfish.port.http.request');
+        expect(this.childLogger.info).to.have.been.calledWithExactly('monkfish.port.http.request', expectedLog);
       });
 
       it('should expose log() in the res object"', function () {
@@ -103,7 +103,7 @@ describe('httpLogger ()', function () {
               total: 0
             }
           };
-          expect(this.childLogger.error).to.have.been.calledWithExactly(expectedLog, 'monkfish.port.http.response');
+          expect(this.childLogger.error).to.have.been.calledWithExactly('monkfish.port.http.response', expectedLog);
         });
       });
     });
@@ -164,7 +164,7 @@ describe('httpLogger ()', function () {
               quuux: '1f2'
             }
           };
-          expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace, true);
+          expect(this.logger.child).to.have.been.calledWithExactly(expectedTrace);
         });
 
         it('should log custom fields"', function () {
@@ -173,7 +173,7 @@ describe('httpLogger ()', function () {
               bar: 'PUT'
             }
           };
-          expect(this.childLogger.info).to.have.been.calledWithExactly(expectedLog, 'foobar.request');
+          expect(this.childLogger.info).to.have.been.calledWithExactly('foobar.request', expectedLog);
         });
       });
     });

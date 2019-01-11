@@ -40,14 +40,13 @@ const logger = function (config, logger) {
     for (let key in config.traceFields) {
       fields[config.traceKey][config.traceFields[key]] = req.trace[key];
     }
-    // true preserves parent's stream configuration
-    req.logger = logger.child(fields, true);
+    req.logger = logger.child(fields);
     const requestData = {};
     requestData[config.requestKey] = {};
     for (let key in config.requestFields) {
       requestData[config.requestKey][config.requestFields[key]] = req[key];
     }
-    req.logger.info(requestData, config.requestMessage);
+    req.logger.info(config.requestMessage, requestData);
     req.timing = new Timing('start');
 
     res.log = () => {
